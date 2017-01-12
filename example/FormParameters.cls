@@ -15,8 +15,10 @@ BLOCK-LEVEL ON ERROR UNDO, THROW.
 
 CLASS example.FormParameters INHERITS BaseParameter: 
 
+    DEFINE PUBLIC PROPERTY username AS CHARACTER NO-UNDO GET. SET.
 
     CONSTRUCTOR PUBLIC FormParameters():
+        SUPER ().
         THIS-OBJECT:example().
     END CONSTRUCTOR.
     
