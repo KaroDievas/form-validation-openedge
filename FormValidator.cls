@@ -22,6 +22,10 @@ CLASS FormValidator:
     DEFINE PRIVATE PROPERTY oErrorObject AS JsonArray NO-UNDO GET. SET.
     DEFINE PUBLIC PROPERTY hasErrors AS LOGICAL INITIAL FALSE NO-UNDO GET. SET.
     
+    DEFINE PRIVATE PROPERTY cCurrentField AS CHARACTER NO-UNDO GET. SET.
+    
+    DEFINE PRIVATE PROPERTY oParameters AS BaseParameter NO-UNDO GET. SET.
+    
     CONSTRUCTOR PUBLIC FormValidator():
         THIS-OBJECT:oErrorObject = NEW JsonArray().
         THIS-OBJECT:oFieldRulesObject = NEW JsonObject().
@@ -32,28 +36,68 @@ CLASS FormValidator:
     END METHOD.
     
     METHOD PUBLIC VOID processValidation():
+        DEFINE VARIABLE i AS INTEGER NO-UNDO.
+        DEFINE VARIABLE cValidatableFields AS CHARACTER EXTENT NO-UNDO.
+        
+        cValidatableFields = THIS-OBJECT:oFieldRulesObject:GetNames().
+        DO i=1 TO EXTENT (cValidatableFields):
+            THIS-OBJECT:validateRules(cValidatableFields[i], THIS-OBJECT:oFieldRulesObject:GetJsonArray(cValidatableFields[i])).
+        END.
+    END METHOD.
+    
+    METHOD PRIVATE VOID validateRules(cFieldName AS CHARACTER, oRulesArray AS JsonArray):
+        DEFINE VARIABLE cRuleName AS CHARACTER NO-UNDO.
+        DEFINE VARIABLE i AS INTEGER NO-UNDO.
+        
+        DO i=1 TO oRulesArray:LENGTH:
+            CASE oRulesArray:GetCharacter(i):
+                WHEN "required" THEN 
+                    DO:
+                        THIS-OBJECT:validateRequired(cFieldName, "").
+                    END. 
+            END CASE.
+        END.
         
     END METHOD.
     
-    METHOD FINAL PUBLIC FormValidator setFieldRules(cFieldName AS CHARACTER, cRule AS CHARACTER):
+    METHOD FINAL PUBLIC FormValidator setField(cFieldName AS CHARACTER):
+        DEFINE VARIABLE oRulesArray AS JsonArray NO-UNDO.
+        
+        THIS-OBJECT:cCurrentField = cFieldName.
+        IF NOT THIS-OBJECT:oFieldRulesObject:Has(cFieldName) THEN DO:
+            oRulesArray = NEW JsonArray().
+            THIS-OBJECT:oFieldRulesObject:add(cFieldName, oRulesArray).
+        END.
+        
+        RETURN THIS-OBJECT.
+    END METHOD.
+    
+    METHOD PUBLIC VOID setFieldAndRulesArray(cFieldName AS CHARACTER, oRulesArray AS JsonArray):
+        THIS-OBJECT:cCurrentField = cFieldName.
+        IF NOT THIS-OBJECT:oFieldRulesObject:Has(cFieldName) THEN 
+        DO:
+            THIS-OBJECT:oFieldRulesObject:add(cFieldName, oRulesArray).
+        END.
+    END METHOD.
+    
+    METHOD FINAL PUBLIC FormValidator setFieldRules(cRule AS CHARACTER):
         DEFINE VARIABLE oRulesArray AS JsonArray NO-UNDO.
         
         THIS-OBJECT:isExistRule(cRule).
+        IF THIS-OBJECT:oFieldRulesObject:Has(THIS-OBJECT:cCurrentField) THEN DO:
+            oRulesArray = THIS-OBJECT:oFieldRulesObject:GetJsonArray(THIS-OBJECT:cCurrentField).
+            oRulesArray:Add(cRule).
+        END.
         
-        IF THIS-OBJECT:oFieldRulesObject:Has(cFieldName) THEN DO:
-            oRulesArray = THIS-OBJECT:oFieldRulesObject:GetJsonArray(cFieldName).
-            oRulesArray:add(cRule).
-        END.
-        ELSE DO:
-            oRulesArray = NEW JsonArray().
-            oRulesArray:add(cRule).
-            THIS-OBJECT:oFieldRulesObject:add(cFieldName, oRulesArray).
-        END.
         RETURN THIS-OBJECT.
     END METHOD.
     
     METHOD PUBLIC JsonArray getErrorList():
         RETURN THIS-OBJECT:oErrorObject.
+    END METHOD.
+    
+    METHOD PUBLIC VOID setParameterObject(oParameters AS BaseParameter):
+        THIS-OBJECT:oParameters = oParameters.
     END METHOD.
     
     METHOD PRIVATE VOID isExistRule(cRule AS CHARACTER):
