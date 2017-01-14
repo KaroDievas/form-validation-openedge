@@ -4,7 +4,7 @@
 - Basically you just need to clone or download these sources.
 
 ## Usage
-```OpenEdge ABL
+```
 USING Progress.Lang.*.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
