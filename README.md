@@ -4,7 +4,7 @@
 - Basically you just need to clone or download these sources.
 
 ## Usage
-[code]
+```
 USING Progress.Lang.*.
 
 BLOCK-LEVEL ON ERROR UNDO, THROW.
@@ -38,4 +38,4 @@ CLASS example.FormParameters INHERITS BaseParameter:
         MESSAGE "End validation process".
     END METHOD.
 END CLASS.
-[/code]
+```
